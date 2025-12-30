@@ -298,7 +298,7 @@ class MoodleSprayer:
 
                     time.sleep(1)  # Rate limiting
 
-                time.sleep(2)  # Extra delay between users
+                time.sleep(0.5)  # Extra delay between users
 
             # Print summary
             print("\n" + "=" * 60)
