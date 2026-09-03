@@ -1,2 +1,222 @@
-<h1>x</h1>xy
-<script>alert(1)</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greeting Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 450px;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        input[type="text"]:hover {
+            border-color: #999;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #greeting {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        #greeting.highlight {
+            background: #e8f0fe;
+            border-color: #667eea;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            #greeting {
+                font-size: 18px;
+                min-height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👋 Welcome</h1>
+        
+        <form id="greetingForm">
+            <div class="form-group">
+                <label for="username">Enter your username:</label>
+                <input type="text" id="username" placeholder="e.g., JohnDoe" required>
+                <div class="error" id="errorMsg">Please enter a username</div>
+            </div>
+            
+            <button type="submit">Submit</button>
+        </form>
+        
+        <div id="greeting">✨ Your greeting will appear here</div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const form = document.getElementById('greetingForm');
+        const usernameInput = document.getElementById('username');
+        const greetingDiv = document.getElementById('greeting');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // Form submit handler
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent page refresh
+            
+            const username = usernameInput.value.trim();
+            
+            // Validate input
+            if (username === '') {
+                errorMsg.style.display = 'block';
+                usernameInput.style.borderColor = '#e74c3c';
+                greetingDiv.textContent = '❌ Please enter a username';
+                greetingDiv.classList.remove('highlight');
+                return;
+            }
+            
+            // Hide error if visible
+            errorMsg.style.display = 'none';
+            usernameInput.style.borderColor = '#e0e0e0';
+            
+            // Display greeting
+            greetingDiv.textContent = `HI ${username}`;
+            greetingDiv.classList.add('highlight');
+            
+            // Optional: Clear input after submission
+            // usernameInput.value = '';
+        });
+
+        // Real-time validation as user types
+        usernameInput.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                errorMsg.style.display = 'none';
+                this.style.borderColor = '#e0e0e0';
+            }
+        });
+
+        // Enter key support (already handled by form submit)
+        // Optional: Auto-focus on page load
+        window.addEventListener('load', function() {
+            usernameInput.focus();
+        });
+    </script>
+</body>
+</html>
