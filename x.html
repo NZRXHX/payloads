@@ -109,8 +109,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 12px;
             border: 2px dashed #e0e0e0;
             transition: all 0.3s ease;
+        }
+
+        #greeting img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #667eea;
         }
 
         #greeting.highlight {
@@ -149,6 +158,12 @@
             #greeting {
                 font-size: 18px;
                 min-height: 50px;
+                flex-wrap: wrap;
+            }
+
+            #greeting img {
+                width: 32px;
+                height: 32px;
             }
         }
     </style>
@@ -196,8 +211,23 @@
             errorMsg.style.display = 'none';
             usernameInput.style.borderColor = '#e0e0e0';
             
-            // Display greeting
-            greetingDiv.textContent = `HI ${username}`;
+            // Create greeting with image
+            // Using textContent for the text part (safe) and creating image with DOM (safe)
+            greetingDiv.innerHTML = '';
+            
+            // Create image element
+            const img = document.createElement('img');
+            img.src = 'x';  // This will show broken image (as requested)
+            img.alt = username;  // Alt text shows username when image fails
+            img.title = username; // Tooltip shows username on hover
+            
+            // Create text node with greeting
+            const textNode = document.createTextNode(`HI ${username}`);
+            
+            // Add both to greeting div
+            greetingDiv.appendChild(img);
+            greetingDiv.appendChild(textNode);
+            
             greetingDiv.classList.add('highlight');
             
             // Optional: Clear input after submission
